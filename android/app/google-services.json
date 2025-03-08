@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "364242849589",
+    "project_id": "appflutter-491a9",
+    "storage_bucket": "appflutter-491a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:364242849589:android:a0b7e47724f57290a0c67c",
+        "android_client_info": {
+          "package_name": "com.example.appdenotas"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxV79ndnrFf-62pe_gqvY5s4bBHAft7RE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
