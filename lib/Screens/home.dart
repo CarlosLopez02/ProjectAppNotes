@@ -1,5 +1,7 @@
-import 'package:appdenotas/Services/firestore.dart';
+import 'package:appdenotas/services/firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+
 
 class Nota {
   String titulo;
@@ -19,53 +21,68 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   late TabController _tabController;
 
   final FirestoreService firestoreService = FirestoreService();
-  final TextEditingController textcontroller1 = TextEditingController(); //title
-  final TextEditingController textcontroller2 = TextEditingController(); //content
+  final TextEditingController textController1 = TextEditingController(); //title
+  final TextEditingController textController2 = TextEditingController(); //content
+  final TextEditingController textTypeController = TextEditingController(); //Type
 
-  void openNoteBox(String title, String content){
-    textcontroller1.text = title;
-    textcontroller2.text = content;
+
+  void openNoteBox({String? docID, String? titulo, String? contenido, String? type,}) {
+    textController1.text = titulo ?? '';
+    textController2.text = contenido ?? '';
+    textTypeController.text = type ?? '';
 
     showDialog(
-      context: context, 
-      builder: (context) => AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min ,
-          children: [
-            TextField(
-              controller: textcontroller1,
-              decoration: InputDecoration(
-                labelText: "Title note"
+        context: context,
+        builder: (context) => AlertDialog(
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: textController1,
+                    decoration: const InputDecoration(
+                      labelText: 'Titulo de la nota',
+                    ),
+                  ),
+                  TextField(
+                    controller: textController2,
+                    decoration: const InputDecoration(
+                      labelText: 'Contenido de la nota',
+                    ),
+                  ),
+                   TextField(
+                    controller: textTypeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Tipo',
+                    ),
+                  )
+                ],
               ),
-            ),
-            SizedBox(height: 20,),
-            TextField(
-              controller: textcontroller2,
-              decoration: InputDecoration(
-                labelText: "Content note"
-              ),
-            )
-          ],
-        ),
+              actions: [
+                ElevatedButton(
+                  onPressed: () {
+                    if (textController1.text.isNotEmpty &&
+                        textController2.text.isNotEmpty && textTypeController.text.isNotEmpty) {
+                      if (docID == null) {
+                        firestoreService.addNote(
+                            textController1.text, textController2.text, textTypeController.text);
+                            
+                      } else {
+                        firestoreService.updateNote(
+                            docID, textController1.text, textController2.text, textTypeController.text);
+                      }
+                    }
 
-        actions: [
-          ElevatedButton(
-            onPressed: (){
-              _agregarNota(textcontroller1.text,textcontroller2.text);
-              firestoreService.addNote(
-                textcontroller1.text, 
-                textcontroller2.text);
-
-
-              textcontroller1.clear();
-              textcontroller2.clear();
-              Navigator.of(context).pop;
-            }, 
-          child: Text("Saved"),
-          ),
-        ],
-      ));
+                    textController1.clear();
+                    textController2.clear();
+                    textTypeController.clear();
+                    Navigator.pop(context);
+                  },
+                  child: const Text("Guardar"),
+                )
+              ],
+            ));
   }
+
 
 
   int contador = 0;
@@ -94,42 +111,39 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     super.dispose();
   }
 
-//Eliminar una nota por indice (posicion)
-  void _eliminarNota(int index) {
-    setState(() => notas.removeAt(index));
+// //Eliminar una nota por indice (posicion)
+//   void _eliminarNota(int index) {
+//     setState(() => notas.removeAt(index));
     
-    notasNormales--;
+//     notasNormales--;
   
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nota $index eliminada"))
-    );
-  }
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Nota $index eliminada"))
+//     );
+//   }
 
-    void _eliminarImportante(int index) {
-    setState(() => importante.removeAt(index));
+//     void _eliminarImportante(int index) {
+//     setState(() => importante.removeAt(index));
 
-    notasImportantes--;
+//     notasImportantes--;
     
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nota $index eliminada"))
-    );
-  }
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(content: Text("Nota $index eliminada"))
+//     );
+//   }
  //agregar una nueva nota
-  void _agregarNota(String titulo, String contenido) {
-    setState(
-        () => notas.add(Nota(titulo: textcontroller1.text, contenido: textcontroller2.text)));
-        notasNormales++;
-    
-  }
+  // void _agregarNota(String titulo, String contenido) {
+  //   setState(() => notas.add(
+  //       Nota(titulo: textController1.text, contenido: textController2.text)));
+  // }
 
-    void _agregarImportante({String title = "Nueva nota importante", String content = "Contenido"}) {
-    setState(
-        () => importante.add(Nota(titulo: title, contenido: content)));
-        notasImportantes++;
-    
-  }
+
+  //   void _agregarNotaImportante(String titulo, String contenido) {
+  //   setState(() => notas.add(
+  //       Nota(titulo: textController1.text, contenido: textController2.text)));
+  // }
 
   //void _limpiarNotas()=> setState(()=> notas.clear());
 
@@ -157,33 +171,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     );
   }
 
-    // Marca una nota a importantes
-  void _marcarComoImportante(int index) {
-    setState(() {
-      final nota = notas.removeAt(index);
-      importante.add(nota);
-      notasNormales--;
-      notasImportantes++;
-    });
+  //   // Marca una nota a importantes
+  // void _marcarComoImportante(int index) {
+  //   setState(() {
+  //     final nota = notas.removeAt(index);
+  //     importante.add(nota);
+  //     notasNormales--;
+  //     notasImportantes++;
+  //   });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nota marcada como importante")),
-    );
-  }
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text("Nota marcada como importante")),
+  //   );
+  // }
 
-  // Marca una nota a normales
-  void _marcarComoNormal(int index) {
-    setState(() {
-      final nota = importante.removeAt(index);
-      notas.add(nota);
-      notasImportantes--;
-      notasNormales++;
-    });
+  // // Marca una nota a normales
+  // void _marcarComoNormal(int index) {
+  //   setState(() {
+  //     final nota = importante.removeAt(index);
+  //     notas.add(nota);
+  //     notasImportantes--;
+  //     notasNormales++;
+  //   });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text("Nota marcada como normal")),
-    );
-  }
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(content: Text("Nota marcada como normal")),
+  //   );
+  // }
  
   @override
   Widget build(BuildContext context) {
@@ -220,144 +234,199 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),),
 
 
-      floatingActionButton:  Row(
-  mainAxisAlignment: MainAxisAlignment.end,
-  children: [
-    FloatingActionButton(
-      onPressed:() => openNoteBox(textcontroller1.text,textcontroller2.text),
+//       floatingActionButton:  Row(
+//   mainAxisAlignment: MainAxisAlignment.end,
+//   children: [
+//     FloatingActionButton(
+//       onPressed:() => openNoteBox(),
     
-      tooltip: "Agregar Nota normales",
-      backgroundColor: Colors.blue,
-         child: Icon(Icons.add),
-    ),
-    SizedBox(width: 10), 
-    FloatingActionButton(
-      onPressed: _agregarImportante, 
-      tooltip: "Agregar Nota a Importantes",
-      backgroundColor: Colors.green, 
-       child: Icon(Icons.add),
-    ),
-  ],
+//       tooltip: "Agregar Nota normales",
+//       backgroundColor: Colors.blue,
+//          child: Icon(Icons.add),
+//     ),
+//     SizedBox(width: 10), 
+//     FloatingActionButton(
+//       onPressed: _agregarImportante, 
+//       tooltip: "Agregar Nota a Importantes",
+//       backgroundColor: Colors.green, 
+//        child: Icon(Icons.add),
+//     ),
+//   ],
   
-),
+// ),
+   
+  floatingActionButton:  
+       FloatingActionButton(
+                onPressed: () => openNoteBox(), 
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.add, color: Colors.white),
+          ),
+        
+   
+ 
 
 
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            GridView.builder(
-              padding: EdgeInsets.all(10),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10),
-              itemCount: notas.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onLongPress: () => _eliminarNota(index),
-                   onHorizontalDragEnd: (details) => {
-                    if (details.primaryVelocity! < 0) 
-                     _marcarComoImportante(index)
-                    
-                  },
-                  child: Card(
-                    color: Colors.blue.shade100,
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(notas[index].titulo,
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          SizedBox(height: 5),
-                          Text(notas[index].contenido),
-                        ],
-                      ),
-                    ),
-                  ),
+
+        body: StreamBuilder<QuerySnapshot>(
+            stream: firestoreService.getNotasStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
                 );
-              },
-            ),
+              } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return const Center(child: Text("No hay notas disponibles"));
+              }
+
+              List notasList = snapshot.data!.docs;
+
+              return GridView.builder(
+                  padding: EdgeInsets.all(10),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10),
+                  itemCount: notasList.length,
+                  itemBuilder: (context, index) {
+                    DocumentSnapshot document = notasList[index];
+                    String docID = document.id;
+                
+                    Map<String, dynamic> data =
+                        document.data() as Map<String, dynamic>;
+                    String notaTitulo = data['title'] ?? 'Sin titulo';
+                    String notaContenido = data['content'] ?? 'Sin contenido';
+                    String notaTipo = data['type']?? 'Sin tipo';
+                    print("Título: $notaTitulo, Contenido: $notaContenido, Tipo: $notaTipo");
+                    
+                    return GestureDetector(
+                      onLongPress: () => firestoreService.deleteNote(docID),
+                      
+                      child: Card(
+                        color: Colors.blue.shade100,
+                        elevation: 4,
+                        child: Padding(
+                          padding: EdgeInsets.all(8),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              ListTile(
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        onPressed: () => openNoteBox(
+                                            docID: docID,
+                                            titulo: notaTitulo,
+                                            contenido: notaContenido,
+                                            type: notaTipo,
+                                            ),
+                                        icon: Icon(Icons.edit)),
+                                        
+                                    IconButton(
+                                        onPressed: () =>
+                                            firestoreService.deleteNote(docID),
+                                        icon: Icon(Icons.remove_circle))
+                                  ],
+                                ),
+                              ),
+                              Text(notaTitulo,
+                                  style: TextStyle(fontWeight: FontWeight.bold)),
+                              SizedBox(height: 5),
+                              Text(notaContenido,
+                                  style: TextStyle(fontWeight: FontWeight.bold)),
+                              SizedBox(height: 5),
+                              Text(notaTipo, style: TextStyle(
+                                fontWeight: FontWeight.bold
+                              ))
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+                
+            })
+
+
+        // body: TabBarView(
+        //   controller: _tabController,
+        //   children: [
+        //     GridView.builder(
+        //       padding: EdgeInsets.all(10),
+        //       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        //           crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10),
+        //       itemCount: notas.length,
+        //       itemBuilder: (context, index) {
+        //         return GestureDetector(
+        //           onLongPress: () => _eliminarNota(index),
+        //            onHorizontalDragEnd: (details) => {
+        //             if (details.primaryVelocity! < 0) 
+        //              _marcarComoImportante(index)
+                    
+        //           },
+        //           child: Card(
+        //             color: Colors.blue.shade100,
+        //             elevation: 4,
+        //             child: Padding(
+        //               padding: EdgeInsets.all(8),
+        //               child: Column(
+        //                 mainAxisAlignment: MainAxisAlignment.center,
+        //                 children: [
+        //                   Text(notas[index].titulo,
+        //                       style: TextStyle(fontWeight: FontWeight.bold)),
+        //                   SizedBox(height: 5),
+        //                   Text(notas[index].contenido),
+        //                 ],
+        //               ),
+        //             ),
+        //           ),
+        //         );
+        //       },
+        //     ),
             
 
 
-             GridView.builder(
-              padding: EdgeInsets.all(10),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10),
-              itemCount: importante.length,
-              itemBuilder: (context, index) =>
-                 GestureDetector(
-                  onLongPress: () => _eliminarImportante(index),
-                  onHorizontalDragEnd: (details) => {
-                    if (details.primaryVelocity! > 0) 
-                     _marcarComoNormal(index)
+        //      GridView.builder(
+        //       padding: EdgeInsets.all(10),
+        //       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        //           crossAxisCount: 2, crossAxisSpacing: 10, mainAxisSpacing: 10),
+        //       itemCount: importante.length,
+        //       itemBuilder: (context, index) =>
+        //          GestureDetector(
+        //           onLongPress: () => _eliminarImportante(index),
+        //           onHorizontalDragEnd: (details) => {
+        //             if (details.primaryVelocity! > 0) 
+        //              _marcarComoNormal(index)
                     
-                  },
-                  child: Card(
-                    color: Colors.blue.shade100,
-                    elevation: 4,
-                    child: Padding(
-                      padding: EdgeInsets.all(8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(importante[index].titulo,
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          SizedBox(height: 5),
-                          Text(importante[index].contenido),
-                        ],
-                      ),
-                    ),
-                  ),
+        //           },
+        //           child: Card(
+        //             color: Colors.blue.shade100,
+        //             elevation: 4,
+        //             child: Padding(
+        //               padding: EdgeInsets.all(8),
+        //               child: Column(
+        //                 mainAxisAlignment: MainAxisAlignment.center,
+        //                 children: [
+        //                   Text(importante[index].titulo,
+        //                       style: TextStyle(fontWeight: FontWeight.bold)),
+        //                   SizedBox(height: 5),
+        //                   Text(importante[index].contenido),
+        //                 ],
+        //               ),
+        //             ),
+        //           ),
                   
-                )
+        //         )
               
-            ),
+        //     ),
 
 
 
-          ],
-        )
+        //   ],
+        // )
 
-    //   body: TabBarView(
-    //     controller: _tabController,
-    //     children: [
-    //        ListView.builder(
-    //     itemCount: notas.length,
-    //     itemBuilder: (context, index) => GestureDetector(
-    //        onHorizontalDragEnd: (details) {
-    //               if (details.primaryVelocity! > 0) {
-    //                 _marcarComoImportante(index);
-    //               }
-    //             },
-    //       onLongPress: () => _eliminarNota(index),
-    //       child: ListTile(
-    //           title: Text(notas[index].titulo),
-    //           subtitle: Text(notas[index].contenido)),
-    //     ),
-        
-        
-       
-    //   ),
-      
-      
-
-    //  ListView.builder(
-    //     itemCount: importante.length,
-    //     itemBuilder: (context, index) => GestureDetector(
-    //         onHorizontalDragEnd: (details) {
-    //               if (details.primaryVelocity! < 0) {
-    //                 _marcarComoNormal(index);
-    //               }
-    //             },
-    //       onLongPress: () => _eliminarImportante(index),
-    //       child: ListTile(
-    //           title: Text(importante[index].titulo),
-    //           subtitle: Text(importante[index].contenido)),
-    //     ),
-    //   ),
-    //     ],
-    //   )
+  
     );
   }
 }

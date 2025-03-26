@@ -7,11 +7,12 @@ class FirestoreService {
 
   //CRUD
   //Create
-  Future<void> addNote(String title, String content){
+  Future<void> addNote(String title, String content, String type){
     return notas.add({
       'timestamp': Timestamp.now(),
       'title': title,
       'content': content,
+      'type': type,
 
     });
   }
@@ -24,15 +25,20 @@ class FirestoreService {
   }
 
   //update
-  Future<void> updateNote(String docId, String nuevoTitulo, String nuevoContenido){
+  Future<void> updateNote(String docId, String nuevoTitulo, String nuevoContenido, String newType){
     return notas.doc(docId).update({
      'title': nuevoTitulo,
      'content': nuevoContenido,
+     'type': newType,
      'timestamp': Timestamp.now(),
     });
   }
 
   //delete
+  Future<void> deleteNote(String docID) {
+    return notas.doc(docID).delete();
+  }
+
   
 
 }
