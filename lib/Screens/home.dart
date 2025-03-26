@@ -1,7 +1,7 @@
 import 'package:appdenotas/services/firestore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-
+import 'package:speech_to_text/speech_to_text.dart';
 
 class Nota {
   String titulo;
@@ -24,6 +24,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   final TextEditingController textController1 = TextEditingController(); //title
   final TextEditingController textController2 = TextEditingController(); //content
   final TextEditingController textTypeController = TextEditingController(); //Type
+  
+
+  SpeechToText speechToText = SpeechToText();
+  bool isListening = false;
 
 
   void openNoteBox({String? docID, String? titulo, String? contenido, String? type,}) {
@@ -54,7 +58,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     decoration: const InputDecoration(
                       labelText: 'Tipo',
                     ),
-                  )
+                  ),
+                    IconButton(
+                        onPressed: () async {
+                          if (!isListening) {
+                            bool available = await speechToText.initialize();
+                            if (available) {
+                              setState(() {
+                                isListening = true;
+                              });
+                            }
+                            speechToText.listen(
+                              onResult: (result) {
+                                setState(() {
+                                  textController2.text = result.recognizedWords;
+                                });
+                              },
+                            );
+                          } else {
+                            setState(() {
+                              isListening = false;
+                            });
+                            speechToText.stop();
+                          }
+                        },
+                        icon: Icon(
+                            isListening ? Icons.stop : Icons.record_voice_over),
+                      )
+
                 ],
               ),
               actions: [
